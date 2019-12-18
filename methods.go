@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
-	"net"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -42,7 +41,7 @@ func (c *Client) CreateAccount(shortName, authorName, authorURL string) (acc Acc
 	}
 
 	var bytes []byte
-	if bytes, err = httpPost(url, params); err == nil {
+	if bytes, err = httpPost(url, params, c.TimeOut); err == nil {
 		var res APIResponseAccount
 		if err = json.Unmarshal(bytes, &res); err == nil {
 			if res.Ok {
@@ -81,7 +80,7 @@ func (c *Client) EditAccountInfo(shortName, authorName, authorURL string) (acc A
 	}
 
 	var bytes []byte
-	if bytes, err = httpPost(url, params); err == nil {
+	if bytes, err = httpPost(url, params, c.TimeOut); err == nil {
 		var res APIResponseAccount
 		if err = json.Unmarshal(bytes, &res); err == nil {
 			if res.Ok {
@@ -117,7 +116,7 @@ func (c *Client) GetAccountInfo(fields []string) (acc Account, err error) {
 	}
 
 	var bytes []byte
-	if bytes, err = httpPost(url, params); err == nil {
+	if bytes, err = httpPost(url, params, c.TimeOut); err == nil {
 		var res APIResponseAccount
 		if err = json.Unmarshal(bytes, &res); err == nil {
 			if res.Ok {
@@ -145,7 +144,7 @@ func (c *Client) RevokeAccessToken() (acc Account, err error) {
 	}
 
 	var bytes []byte
-	if bytes, err = httpPost(url, params); err == nil {
+	if bytes, err = httpPost(url, params, c.TimeOut); err == nil {
 		var res APIResponseAccount
 		if err = json.Unmarshal(bytes, &res); err == nil {
 			if res.Ok {
@@ -190,7 +189,7 @@ func (c *Client) CreatePage(title, authorName, authorURL string, content []Node,
 	}
 
 	var bytes []byte
-	if bytes, err = httpPost(url, params); err == nil {
+	if bytes, err = httpPost(url, params, c.TimeOut); err == nil {
 		var res APIResponsePage
 		if err = json.Unmarshal(bytes, &res); err == nil {
 			if res.Ok {
@@ -247,7 +246,7 @@ func (c *Client) EditPage(path, title string, content []Node, authorName, author
 	}
 
 	var bytes []byte
-	if bytes, err = httpPost(url, params); err == nil {
+	if bytes, err = httpPost(url, params, c.TimeOut); err == nil {
 		var res APIResponsePage
 		if err = json.Unmarshal(bytes, &res); err == nil {
 			if res.Ok {
@@ -275,7 +274,7 @@ func (c *Client) GetPage(path string, returnContent bool) (page Page, err error)
 	var bytes []byte
 	if bytes, err = httpPost(url, map[string]interface{}{
 		"return_content": returnContent,
-	}); err == nil {
+	}, c.TimeOut); err == nil {
 		var res APIResponsePage
 		if err = json.Unmarshal(bytes, &res); err == nil {
 			if res.Ok {
@@ -312,7 +311,7 @@ func (c *Client) GetPageList(offset, limit int) (list PageList, err error) {
 	}
 
 	var bytes []byte
-	if bytes, err = httpPost(url, params); err == nil {
+	if bytes, err = httpPost(url, params, c.TimeOut); err == nil {
 		var res APIResponsePageList
 		if err = json.Unmarshal(bytes, &res); err == nil {
 			if res.Ok {
@@ -356,7 +355,7 @@ func (c *Client) GetViews(path string, year, month, day, hour int) (views PageVi
 	}
 
 	var bytes []byte
-	if bytes, err = httpPost(url, params); err == nil {
+	if bytes, err = httpPost(url, params, c.TimeOut); err == nil {
 		var res APIResponsePageViews
 		if err = json.Unmarshal(bytes, &res); err == nil {
 			if res.Ok {
@@ -440,7 +439,7 @@ func traverseNodes(selections *goquery.Selection) []Node {
 }
 
 // send HTTP POST request (www-form urlencoded)
-func httpPost(apiURL string, params map[string]interface{}) (jsonBytes []byte, err error) {
+func httpPost(apiURL string, params map[string]interface{}, timeout time.Duration) (jsonBytes []byte, err error) {
 	v("sending post request to url: %s, params: %#v", apiURL, params)
 
 	var js []byte
@@ -468,16 +467,7 @@ func httpPost(apiURL string, params map[string]interface{}) (jsonBytes []byte, e
 
 		var res *http.Response
 		client := &http.Client{
-			Transport: &http.Transport{
-				Dial: (&net.Dialer{
-					Timeout:   10 * time.Second,
-					KeepAlive: 300 * time.Second,
-				}).Dial,
-				IdleConnTimeout:       90 * time.Second,
-				TLSHandshakeTimeout:   10 * time.Second,
-				ResponseHeaderTimeout: 10 * time.Second,
-				ExpectContinueTimeout: 1 * time.Second,
-			},
+			Timeout: timeout,
 		}
 
 		res, err = client.Do(req)

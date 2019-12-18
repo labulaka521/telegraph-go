@@ -1,5 +1,7 @@
 package telegraph
 
+import "time"
+
 // http://telegra.ph/api
 
 // constants
@@ -13,11 +15,12 @@ var Verbose bool // default: false
 // Client struct
 type Client struct {
 	AccessToken string
+	TimeOut     time.Duration
 }
 
 // Create creates a new Telegraph client.
-func Create(shortName, authorName, authorURL string) (*Client, error) {
-	client := Client{}
+func Create(shortName, authorName, authorURL string, timeout time.Duration) (*Client, error) {
+	client := Client{TimeOut: timeout}
 
 	created, err := client.CreateAccount(shortName, authorName, authorURL)
 

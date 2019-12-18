@@ -1,4 +1,4 @@
-module github.com/meinside/telegraph-go
+module github.com/labulaka521/telegraph-go
 
 require (
 	github.com/PuerkitoBio/goquery v1.5.0
